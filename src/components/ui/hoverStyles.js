@@ -41,6 +41,17 @@ export const OUTLINE_GOLD =
   'focus-visible:border-accent/60 focus-visible:text-accent ' +
   'focus-visible:shadow-[0_0_18px_rgba(201,162,39,0.25)]'
 
+/**
+ * Large panels — listing cards and the like. Gold hairline, a soft gold glow
+ * and the same 2px lift the gallery thumbnails use. Text colour is left alone
+ * so the card's own hierarchy survives the hover. There is deliberately no
+ * `focus-visible` pair: these cards are not interactive, and a focus-driven
+ * lift would stick after a click elsewhere on the page.
+ */
+export const CARD_GOLD =
+  'hover:-translate-y-0.5 hover:border-accent/60 ' +
+  'hover:shadow-[0_12px_30px_rgba(0,0,0,0.30),0_0_22px_rgba(201,162,39,0.18)]'
+
 /** Glow only — for solid fills that already carry their own colour. */
 export const GOLD_GLOW =
   'hover:shadow-[0_0_18px_rgba(201,162,39,0.25)] focus-visible:shadow-[0_0_18px_rgba(201,162,39,0.25)]'

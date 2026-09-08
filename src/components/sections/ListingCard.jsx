@@ -1,4 +1,5 @@
 import Placeholder from '../ui/Placeholder'
+import { CARD_GOLD } from '../ui/hoverStyles'
 import { asset } from '../../lib/asset'
 import { formatPrice } from '../../data/listings'
 
@@ -14,7 +15,9 @@ function ListingCard({ listing }) {
       : [`${listing.beds} bd`, `${listing.baths} ba`, `${listing.sqft.toLocaleString('en-US')} sqft`]
 
   return (
-    <article className="flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md">
+    <article
+      className={`group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md transition-all duration-[250ms] ${CARD_GOLD}`}
+    >
       {/* Real photo when the listing has one, Placeholder until it does. */}
       <div className="relative h-[190px] w-full border-b border-white/10 md:h-[200px]">
         {listing.image ? (
@@ -22,7 +25,7 @@ function ListingCard({ listing }) {
             src={asset(listing.image)}
             alt={`${listing.address}, ${listing.city}`}
             loading="lazy"
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover transition-transform duration-[450ms] group-hover:scale-[1.04]"
           />
         ) : (
           <Placeholder label="Listing photo" className="h-full w-full border-0" />

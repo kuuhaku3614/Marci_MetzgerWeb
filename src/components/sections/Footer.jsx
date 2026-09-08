@@ -45,7 +45,10 @@ function Footer() {
               <a
                 key={item.href}
                 href={item.href}
-                className={`group relative text-xs font-semibold uppercase leading-none tracking-[0.1em] text-on-navy transition-colors duration-200 md:text-[13px] ${LINK_GOLD}`}
+                /* `before` widens the tap area to ~28px tall. Padding cannot be
+                   used here: LINK_UNDERLINE is positioned against this box, so
+                   padding would detach the underline from the text. */
+                className={`group relative text-xs font-semibold uppercase leading-none tracking-[0.1em] text-on-navy transition-colors duration-200 before:absolute before:-inset-x-2.5 before:-inset-y-2 before:content-[''] md:text-[13px] ${LINK_GOLD}`}
               >
                 {item.label}
                 <span aria-hidden="true" className={`${LINK_UNDERLINE} w-0`} />

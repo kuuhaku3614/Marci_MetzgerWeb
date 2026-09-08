@@ -73,7 +73,9 @@ function OfficeHoursDropdown() {
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => setOpen((value) => !value)}
-        className={`flex w-full cursor-pointer items-center justify-between gap-3 text-left text-base font-semibold transition-colors duration-200 md:text-[17px] ${LINK_GOLD}`}
+        /* -my-1.5 cancels the padding, so the row keeps its exact height while
+           the trigger becomes 36px tall to tap. */
+        className={`-my-1.5 flex w-full cursor-pointer items-center justify-between gap-3 py-1.5 text-left text-base font-semibold transition-colors duration-200 md:text-[17px] ${LINK_GOLD}`}
       >
         <span>Open daily</span>
         <span className="flex items-center gap-2">

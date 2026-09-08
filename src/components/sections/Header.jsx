@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import Button from '../ui/Button'
 import Container from '../ui/Container'
 import Wordmark from '../ui/Wordmark'
@@ -119,15 +120,25 @@ function Header() {
         </div>
       </Container>
 
-      {menuOpen && (
-        <div
-          ref={panelRef}
-          role="dialog"
-          aria-modal="true"
-          aria-label="Site menu"
-          className="fixed inset-0 z-50 bg-[#0A1628]/95 backdrop-blur-xl"
-        >
-          <Container className="flex h-full flex-col pt-8">
+      {/*
+       * Portalled to <body>. This header carries `backdrop-blur`, and an
+       * element with a backdrop-filter becomes the containing block for its
+       * fixed descendants — so `fixed inset-0` here resolved to the 70px
+       * header box instead of the viewport, leaving the panel background
+       * painting only a strip at the top. The portal also lifts the panel out
+       * of the header's z-30 stacking context so it sits above the mobile
+       * call bar (z-40) rather than under it.
+       */}
+      {menuOpen &&
+        createPortal(
+          <div
+            ref={panelRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Site menu"
+            className="fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-[#0A1628] md:bg-[#0A1628]/95 md:backdrop-blur-xl"
+          >
+            <Container className="flex min-h-full flex-col pb-10 pt-8">
             <div className="flex items-center justify-between">
               <Wordmark />
               <button
@@ -155,13 +166,19 @@ function Header() {
               ))}
             </nav>
 
-            <Button as="a" href={`tel:${PHONE}`} className="mt-12 self-start" onClick={() => setMenuOpen(false)}>
-              <PhoneIcon />
-              Call {PHONE}
-            </Button>
-          </Container>
-        </div>
-      )}
+              <Button
+                as="a"
+                href={`tel:${PHONE}`}
+                className="mt-12 self-start"
+                onClick={() => setMenuOpen(false)}
+              >
+                <PhoneIcon />
+                Call {PHONE}
+              </Button>
+            </Container>
+          </div>,
+          document.body,
+        )}
     </header>
   )
 }

@@ -24,7 +24,7 @@ function App() {
      * `overflow-x-hidden`: hidden would turn this into a scroll container and
      * break the sticky header, clip contains the overflow without doing that.
      */
-    <div className="relative isolate overflow-x-clip bg-[#0A1628]">
+    <div className="relative isolate overflow-x-clip bg-[#0A1628] pb-[60px] md:pb-0">
       <PageBackground />
 
       <a
@@ -36,8 +36,7 @@ function App() {
 
       <Header />
 
-      {/* Bottom padding clears the fixed mobile call bar. */}
-      <main id="main" className="relative z-10 pb-[60px] md:pb-0">
+      <main id="main" className="relative z-10">
         <Hero filters={filters} setFilter={setFilter} />
         <ProofBar />
 
@@ -59,6 +58,8 @@ function App() {
       </main>
 
       <Footer />
+      {/* The call bar is fixed, so the wrapper's bottom padding — not main's —
+          is what keeps it from covering the end of the footer. */}
       <StickyCallBar />
     </div>
   )
