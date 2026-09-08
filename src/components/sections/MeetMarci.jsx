@@ -25,8 +25,7 @@ function MeetMarci() {
           <Eyebrow>Realtor for nearly 3 decades</Eyebrow>
           <h2 className="text-[clamp(1.75rem,3.5vw,2.625rem)] tracking-[-0.012em]">Meet Marci Metzger</h2>
           <p className="max-w-[52ch] text-muted">
-            I have spent nearly thirty years helping people buy and sell across the Pahrump valley. My team works hard
-            every day to grow and learn, so that we may continue to excel in our market.
+            Marci was a REALTOR, then licensed Broker, in Washington State. Now, she is enjoying the sunshine, and helping clients in Southern Nevada. Having helped buyers and sellers in many markets since 1995, she is a wealth of knowledge.
           </p>
           <p className="max-w-[52ch] text-muted">
             Our clients deserve our best &mdash; and we want to make sure our best is better every year.
