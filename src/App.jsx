@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import Contact from './components/sections/Contact'
 import Credentials from './components/sections/Credentials'
 import FeaturedListings from './components/sections/FeaturedListings'
@@ -17,6 +18,21 @@ import { useListingFilters } from './hooks/useListingFilters'
 
 function App() {
   const { filters, setFilter, reset, results, isFiltered } = useListingFilters()
+
+  /*
+   * The browser resolves a URL fragment before React has rendered the
+   * sections, so opening /#contact directly would otherwise land at the top
+   * of the page. Re-apply it once, after the sections exist.
+   */
+  useEffect(() => {
+    const { hash } = window.location
+    if (!hash || hash === '#top') return
+    try {
+      document.querySelector(hash)?.scrollIntoView({ block: 'start' })
+    } catch {
+      /* not a valid CSS selector — nothing to scroll to */
+    }
+  }, [])
 
   return (
     /*

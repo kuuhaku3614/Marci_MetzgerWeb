@@ -22,7 +22,7 @@ function LetsMove() {
         </div>
 
         <img
-          src={asset('move.png')}
+          src={asset('gallery_photo3.webp')}
           alt="Single-storey homes with a pool, backing onto open desert and mountains outside Pahrump"
           loading="lazy"
           className="h-[200px] w-full rounded-2xl object-cover md:h-[400px]"

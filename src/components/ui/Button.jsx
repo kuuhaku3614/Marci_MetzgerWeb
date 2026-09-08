@@ -24,7 +24,7 @@ function Button({ as: Tag = 'button', variant = 'primary', size = 'md', full = f
        * applies it to <button>, so buttons otherwise inherit the browser's
        * default arrow. Harmless on the `as="a"` variants.
        */
-      className={`inline-flex cursor-pointer items-center justify-center gap-2.5 rounded-xl border text-sm font-semibold tracking-[0.05em] transition-all duration-200 ease-out ${
+      className={`inline-flex cursor-pointer items-center justify-center gap-2.5 rounded-xl border text-sm font-semibold tracking-[0.05em] transition-all duration-200 ease-out disabled:cursor-not-allowed disabled:opacity-60 ${
         VARIANTS[variant]
       } ${SIZES[size]} ${full ? 'w-full' : ''} ${className}`}
       {...(Tag === 'button' && !props.type ? { type: 'button' } : null)}

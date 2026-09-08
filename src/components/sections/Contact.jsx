@@ -143,20 +143,54 @@ function Field({ label, name, required = false, as = 'input', type = 'text' }) {
 }
 
 /*
- * There is no mail backend in this build, so the form acknowledges the
- * submission and points at the phone number rather than either silently
- * discarding the message or claiming to have sent one. The live region stays
- * mounted (sr-only when idle) so screen readers announce the confirmation.
+ * Submissions go to Web3Forms, which posts the payload straight to the
+ * configured inbox — no server of our own, which suits a statically hosted
+ * page. The access key only identifies that inbox and carries no account
+ * privileges, so it is safe in client-side code.
+ *
+ * Replace the placeholder with the key emailed to you by web3forms.com.
  */
+const FORM_ENDPOINT = 'https://api.web3forms.com/submit'
+const FORM_ACCESS_KEY = '6841383a-09e7-48f3-b26d-8e17b27db9d8'
+
 function ContactForm() {
-  const [sent, setSent] = useState(false)
+  // idle | sending | sent | error
+  const [status, setStatus] = useState('idle')
   const formRef = useRef(null)
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
-    setSent(true)
-    formRef.current?.reset()
+    const fields = Object.fromEntries(new FormData(event.currentTarget))
+    setStatus('sending')
+
+    try {
+      const response = await fetch(FORM_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          access_key: FORM_ACCESS_KEY,
+          subject: 'New enquiry from the Marci Metzger site',
+          ...fields,
+        }),
+      })
+
+      const result = await response.json()
+      if (!result.success) throw new Error(result.message || 'rejected')
+
+      setStatus('sent')
+      formRef.current?.reset()
+    } catch {
+      // Never leave the visitor guessing: fall back to the phone number.
+      setStatus('error')
+    }
   }
+
+  const message =
+    status === 'sent'
+      ? 'Thanks — your message is on its way. Marci will get back to you shortly.'
+      : status === 'error'
+        ? 'Something went wrong sending that. Please call or text 206-919-6886 and Marci will help you right away.'
+        : ''
 
   return (
     <form ref={formRef} className="flex flex-col gap-5" onSubmit={handleSubmit}>
@@ -164,22 +198,26 @@ function ContactForm() {
       <Field label="Email" name="email" required type="email" />
       <Field label="Message" name="message" as="textarea" />
 
-      <Button type="submit" className="mt-1 self-start">
-        Send message
+      {/* Honeypot: bots complete it, people never see it. */}
+      <input type="checkbox" name="botcheck" className="hidden" tabIndex={-1} autoComplete="off" />
+
+      <Button type="submit" className="mt-1 self-start" disabled={status === 'sending'}>
+        {status === 'sending' ? 'Sending…' : 'Send message'}
       </Button>
 
+      {/* Stays mounted so the result is announced, sr-only until there is one. */}
       <p
         role="status"
         aria-live="polite"
         className={
-          sent
-            ? 'rounded-xl border border-accent/40 bg-accent/10 px-4 py-3.5 text-sm leading-[1.6] text-ink'
+          message
+            ? `rounded-xl border px-4 py-3.5 text-sm leading-[1.6] text-ink ${
+                status === 'error' ? 'border-white/20 bg-white/5' : 'border-accent/40 bg-accent/10'
+              }`
             : 'sr-only'
         }
       >
-        {sent
-          ? 'Thanks for reaching out. This form is not connected to a mailbox yet — the quickest way to reach Marci is a call or text to 206-919-6886.'
-          : ''}
+        {message}
       </p>
     </form>
   )
