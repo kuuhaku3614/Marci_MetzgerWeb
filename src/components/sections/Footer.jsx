@@ -76,7 +76,7 @@ function Footer() {
         <div className="h-px bg-white/10" />
 
         <p className="text-center text-[10px] font-medium uppercase leading-[1.6] tracking-[0.14em] text-on-navy-dim md:text-left md:text-[11px] md:tracking-[0.16em]">
-          Copyright &copy; 2024 Marci Metzger &mdash; All Rights Reserved
+          Copyright &copy; 2026 Marci Metzger &mdash; All Rights Reserved
         </p>
       </Container>
     </footer>

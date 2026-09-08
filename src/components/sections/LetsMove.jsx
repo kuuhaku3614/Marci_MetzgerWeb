@@ -1,7 +1,7 @@
 import Button from '../ui/Button'
 import Container from '../ui/Container'
-import Placeholder from '../ui/Placeholder'
 import { Eyebrow } from '../ui/SectionHeading'
+import { asset } from '../../lib/asset'
 
 function LetsMove() {
   return (
@@ -21,7 +21,12 @@ function LetsMove() {
           </Button>
         </div>
 
-        <Placeholder label="Pahrump valley photo" tone="navy" className="h-[200px] w-full rounded-2xl md:h-[400px]" />
+        <img
+          src={asset('move.png')}
+          alt="Single-storey homes with a pool, backing onto open desert and mountains outside Pahrump"
+          loading="lazy"
+          className="h-[200px] w-full rounded-2xl object-cover md:h-[400px]"
+        />
       </Container>
     </section>
   )

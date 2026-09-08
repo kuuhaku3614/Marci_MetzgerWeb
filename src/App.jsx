@@ -6,7 +6,7 @@ import Gallery from './components/sections/Gallery'
 import GetItSold from './components/sections/GetItSold'
 import Header from './components/sections/Header'
 import Hero from './components/sections/Hero'
-// import LetsMove from './components/sections/LetsMove'
+import LetsMove from './components/sections/LetsMove'
 import MeetMarci from './components/sections/MeetMarci'
 import PageBackground from './components/ui/PageBackground'
 import ProofBar from './components/sections/ProofBar'
@@ -42,7 +42,7 @@ function App() {
 
         <MeetMarci />
         <GetItSold />
-        {/* <LetsMove /> */}
+        <LetsMove />
         <Services />
         {/* <Testimonials /> */}
         <Gallery />

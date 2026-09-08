@@ -117,7 +117,7 @@ function OfficeHoursDropdown() {
   )
 }
 
-function Field({ label, required = false, as = 'input', type = 'text' }) {
+function Field({ label, name, required = false, as = 'input', type = 'text' }) {
   const id = useId()
   const Tag = as
   return (
@@ -130,6 +130,7 @@ function Field({ label, required = false, as = 'input', type = 'text' }) {
       </label>
       <Tag
         id={id}
+        name={name}
         type={as === 'input' ? type : undefined}
         required={required}
         rows={as === 'textarea' ? 5 : undefined}
@@ -141,6 +142,49 @@ function Field({ label, required = false, as = 'input', type = 'text' }) {
   )
 }
 
+/*
+ * There is no mail backend in this build, so the form acknowledges the
+ * submission and points at the phone number rather than either silently
+ * discarding the message or claiming to have sent one. The live region stays
+ * mounted (sr-only when idle) so screen readers announce the confirmation.
+ */
+function ContactForm() {
+  const [sent, setSent] = useState(false)
+  const formRef = useRef(null)
+
+  const handleSubmit = (event) => {
+    event.preventDefault()
+    setSent(true)
+    formRef.current?.reset()
+  }
+
+  return (
+    <form ref={formRef} className="flex flex-col gap-5" onSubmit={handleSubmit}>
+      <Field label="Name" name="name" />
+      <Field label="Email" name="email" required type="email" />
+      <Field label="Message" name="message" as="textarea" />
+
+      <Button type="submit" className="mt-1 self-start">
+        Send message
+      </Button>
+
+      <p
+        role="status"
+        aria-live="polite"
+        className={
+          sent
+            ? 'rounded-xl border border-accent/40 bg-accent/10 px-4 py-3.5 text-sm leading-[1.6] text-ink'
+            : 'sr-only'
+        }
+      >
+        {sent
+          ? 'Thanks for reaching out. This form is not connected to a mailbox yet — the quickest way to reach Marci is a call or text to 206-919-6886.'
+          : ''}
+      </p>
+    </form>
+  )
+}
+
 function Contact() {
   return (
     <section id="contact" className="relative z-10 bg-transparent py-14 md:py-24">
@@ -148,17 +192,7 @@ function Contact() {
         <SectionHeading eyebrow="Get in touch" title="Call or visit" className="pb-10 md:pb-12" />
 
         <div className="grid gap-10 md:grid-cols-2 md:gap-[72px]">
-          <form className="flex flex-col gap-5" onSubmit={(event) => event.preventDefault()}>
-            <Field label="Name" />
-            <Field label="Email" required type="email" />
-            <Field label="Message" as="textarea" />
-            <Button type="submit" className="mt-1 self-start">
-              Send message
-            </Button>
-            <p className="text-xs leading-[1.6] text-on-navy-dim">
-              This site is protected by reCAPTCHA and the Google Privacy Policy and Terms of Service apply.
-            </p>
-          </form>
+          <ContactForm />
 
           <div className="flex flex-col gap-8">
             <div className="flex flex-col items-start gap-3.5">
