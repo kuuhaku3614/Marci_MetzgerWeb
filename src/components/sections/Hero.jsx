@@ -17,10 +17,10 @@ function Hero({ filters, setFilter }) {
         <div className="flex max-w-[46rem] flex-col items-start gap-5 md:gap-6">
           <Eyebrow tone="soft">Marci Metzger &middot; The Ridge Realty Group</Eyebrow>
           <h1 className="text-[clamp(2.375rem,6vw,4.125rem)] font-semibold leading-[1.02] tracking-[-0.022em]">
-            Pahrump&rsquo;s realtor for nearly three decades.
+            Pahrump Realtor
           </h1>
           <p className="max-w-[46ch] text-[19px] leading-[1.6] text-muted">
-            Ninety families helped in 2021 alone. Buying your first place, selling the family home, or moving out to
+            Buying your first place, selling the family home, or moving out to
             the valley &mdash; you&rsquo;ll have a pro at your service.
           </p>
           <div className="flex flex-col gap-3.5 pt-1.5 sm:flex-row">

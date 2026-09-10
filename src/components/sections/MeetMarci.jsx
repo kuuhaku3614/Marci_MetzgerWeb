@@ -18,7 +18,7 @@ function MeetMarci() {
           src={asset("marci.png")}
           alt="Marci Metzger"
           loading="lazy"
-          className="h-[300px] w-full rounded-2xl border border-white/10 object-cover md:h-[520px]"
+          className="mx-auto aspect-square w-full max-w-75 rounded-full border border-white/10 object-cover object-top md:max-w-105"
         />
 
         <div className="flex flex-col items-start gap-5 md:gap-6">
