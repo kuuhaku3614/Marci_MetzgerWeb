@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Contact from './components/sections/Contact'
 import Credentials from './components/sections/Credentials'
 import FeaturedListings from './components/sections/FeaturedListings'
@@ -15,9 +15,30 @@ import Services from './components/sections/Services'
 import StickyCallBar from './components/sections/StickyCallBar'
 // import Testimonials from './components/sections/Testimonials'
 import { useListingFilters } from './hooks/useListingFilters'
+import { listings } from './data/listings'
+
+/*
+ * A shared link carries the listing as ?listing=<id> - a query param rather
+ * than a fragment, so it cannot collide with the #contact handler below and
+ * trigger two competing scrolls. Read during the initial render so the
+ * contact form has it on its very first effect, with no extra pass.
+ */
+function enquiryFromUrl() {
+  const id = new URLSearchParams(window.location.search).get('listing')
+  const listing = id ? listings.find((item) => item.id === id) : null
+  return listing ? { listing, nonce: 0, fromLink: true } : null
+}
 
 function App() {
   const { filters, setFilter, reset, results, isFiltered } = useListingFilters()
+
+  // Which listing the visitor asked about. `nonce` makes a repeat click on the
+  // same card a fresh request rather than an identical, ignored value.
+  const [enquiry, setEnquiry] = useState(enquiryFromUrl)
+
+  const requestEnquiry = useCallback((listing) => {
+    setEnquiry({ listing, nonce: Date.now(), fromLink: false })
+  }, [])
 
   /*
    * The browser resolves a URL fragment before React has rendered the
@@ -26,7 +47,8 @@ function App() {
    */
   useEffect(() => {
     const { hash } = window.location
-    if (!hash || hash === '#top') return
+    // A ?listing= link does its own offset-aware scroll; don't fight it.
+    if (!hash || hash === '#top' || enquiryFromUrl()) return
     try {
       document.querySelector(hash)?.scrollIntoView({ block: 'start' })
     } catch {
@@ -69,8 +91,9 @@ function App() {
           reset={reset}
           results={results}
           isFiltered={isFiltered}
+          onEnquire={requestEnquiry}
         />
-        <Contact />
+        <Contact enquiry={enquiry} />
       </main>
 
       <Footer />

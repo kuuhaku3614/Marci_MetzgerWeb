@@ -14,7 +14,7 @@ import {
 } from '../../data/filterOptions'
 import { listings } from '../../data/listings'
 
-function FeaturedListings({ filters, setFilter, reset, results, isFiltered }) {
+function FeaturedListings({ filters, setFilter, reset, results, isFiltered, onEnquire }) {
   return (
     <section id="listings" className="relative z-10 bg-transparent py-14 md:py-24">
       <Container>
@@ -48,7 +48,7 @@ function FeaturedListings({ filters, setFilter, reset, results, isFiltered }) {
         {results.length > 0 ? (
           <div className="grid gap-5 md:grid-cols-2 md:gap-8 lg:grid-cols-3">
             {results.map((listing) => (
-              <ListingCard key={listing.id} listing={listing} />
+              <ListingCard key={listing.id} listing={listing} onEnquire={onEnquire} />
             ))}
           </div>
         ) : (

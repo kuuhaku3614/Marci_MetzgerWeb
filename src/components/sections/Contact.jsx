@@ -4,6 +4,7 @@ import Container from '../ui/Container'
 import SectionHeading, { Eyebrow } from '../ui/SectionHeading'
 import { LINK_GOLD, OUTLINE_GOLD } from '../ui/hoverStyles'
 import { ChevronDownIcon, PhoneIcon } from '../ui/Icons'
+import { formatPrice } from '../../data/listings'
 
 const OFFICE_ADDRESS = '3190 HW 160, Suite F, Pahrump, NV, 89048'
 
@@ -117,7 +118,7 @@ function OfficeHoursDropdown() {
   )
 }
 
-function Field({ label, name, required = false, as = 'input', type = 'text' }) {
+function Field({ label, name, inputRef, required = false, as = 'input', type = 'text' }) {
   const id = useId()
   const Tag = as
   return (
@@ -129,6 +130,7 @@ function Field({ label, name, required = false, as = 'input', type = 'text' }) {
         </Eyebrow>
       </label>
       <Tag
+        ref={inputRef}
         id={id}
         name={name}
         type={as === 'input' ? type : undefined}
@@ -153,14 +155,175 @@ function Field({ label, name, required = false, as = 'input', type = 'text' }) {
 const FORM_ENDPOINT = 'https://api.web3forms.com/submit'
 const FORM_ACCESS_KEY = '6841383a-09e7-48f3-b26d-8e17b27db9d8'
 
-function ContactForm() {
-  // idle | sending | sent | error
+/** The exact wording a card click drops into the message field. */
+function buildEnquiry(listing) {
+  // Mirrors the card's own spec line, so Land entries never read "undefined bd".
+  const specs =
+    listing.type === 'Land'
+      ? `${listing.lotAcres} acres`
+      : `${listing.beds} bd · ${listing.baths} ba · ${listing.sqft.toLocaleString('en-US')} sqft`
+
+  return `Hi Marci, I'm interested in ${listing.address}, ${listing.city}, NV ${listing.zip} (${formatPrice(
+    listing.price,
+  )} · ${specs}).
+
+I'd like to:
+-
+
+Best time to reach me:`
+}
+
+function scrollToContact() {
+  const section = document.getElementById('contact')
+  if (!section) return
+
+  /*
+   * The header is sticky, so scrolling the section flush to y=0 would tuck
+   * "Call or visit" underneath it. Measure the header instead of hard-coding
+   * its 70px / 88px breakpoints.
+   */
+  const header = document.querySelector('header')
+  const offset = (header?.offsetHeight ?? 0) + 16
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  window.scrollTo({
+    top: Math.max(0, section.getBoundingClientRect().top + window.scrollY - offset),
+    behavior: reduced ? 'auto' : 'smooth',
+  })
+}
+
+/*
+ * Web3Forms' own script renders any .h-captcha element using their sitekey,
+ * so no key is needed in our source. It also injects the hidden
+ * h-captcha-response textarea that the server verifies the token from.
+ */
+const CAPTCHA_SCRIPT = 'https://web3forms.com/client/script.js'
+
+/*
+ * A cooldown, deliberately not a one-per-address cap. The listing cards are
+ * built to produce several enquiries from one buyer, so a lifetime limit
+ * would block the exact behaviour the site is designed for. This only stops
+ * accidental double-sends. Real spam never runs this code at all - it posts
+ * straight to the API - which is what the captcha is for.
+ */
+const COOLDOWN_MS = 60000
+const COOLDOWN_KEY = 'mm:last-enquiry'
+
+function lastSentAt() {
+  try {
+    const value = Number(window.localStorage.getItem(COOLDOWN_KEY))
+    return Number.isFinite(value) ? value : 0
+  } catch {
+    // Storage blocked (private mode, site-data off): no cooldown beats no form.
+    return 0
+  }
+}
+
+function rememberSend() {
+  try {
+    window.localStorage.setItem(COOLDOWN_KEY, String(Date.now()))
+  } catch {
+    /* nothing to do - the send already succeeded */
+  }
+}
+
+function statusMessage(status, seconds) {
+  switch (status) {
+    case 'sent':
+      return 'Thanks - your message is on its way. Marci will get back to you shortly.'
+    case 'error':
+      return 'Something went wrong sending that. Please call or text 206-919-6886 and Marci will help you right away.'
+    case 'captcha':
+      return 'Please complete the captcha below so Marci knows you are a real person.'
+    case 'cooldown':
+      return `That message just went through. You can send another in ${seconds} seconds, or call 206-919-6886 if it is urgent.`
+    default:
+      return ''
+  }
+}
+
+function ContactForm({ enquiry }) {
+  // idle | sending | sent | error | captcha | cooldown
   const [status, setStatus] = useState('idle')
+  const [secondsLeft, setSecondsLeft] = useState(0)
   const formRef = useRef(null)
+  const messageRef = useRef(null)
+  // The last block we inserted, so an untouched prefill can be swapped for a
+  // different listing without treating it as something the visitor wrote.
+  const lastPrefill = useRef('')
+
+  useEffect(() => {
+    const field = messageRef.current
+    if (!enquiry || !field) return undefined
+
+    const block = buildEnquiry(enquiry.listing)
+    const existing = field.value
+
+    if (!existing.trim() || existing === lastPrefill.current) {
+      field.value = block
+      lastPrefill.current = block
+    } else {
+      // Typed text is never destroyed - the listing is appended beneath it.
+      field.value = `${existing.replace(/\s+$/, '')}\n\n${block}`
+      lastPrefill.current = ''
+    }
+
+    // Drop the caret on the "-" bullet so they can start typing immediately.
+    const dash = field.value.lastIndexOf('\n-')
+    const caret = dash === -1 ? field.value.length : dash + 2
+
+    const apply = () => {
+      scrollToContact()
+      // preventScroll matters: focusing scrolls the element into view by
+      // default, which would fight the smooth scroll we just started.
+      field.focus({ preventScroll: true })
+      field.setSelectionRange(caret, caret)
+    }
+
+    // A shared link arrives mid-load; wait for images so the offset is
+    // measured against the settled layout rather than a half-built page.
+    if (enquiry.fromLink && document.readyState !== 'complete') {
+      window.addEventListener('load', apply, { once: true })
+      return () => window.removeEventListener('load', apply)
+    }
+
+    apply()
+    return undefined
+  }, [enquiry])
+
+  /*
+   * Loaded here rather than in index.html on purpose: the script upgrades any
+   * .h-captcha element it finds at load time, and React has not rendered that
+   * element yet while <head> is being parsed.
+   */
+  useEffect(() => {
+    if (document.querySelector(`script[src="${CAPTCHA_SCRIPT}"]`)) return
+    const script = document.createElement('script')
+    script.src = CAPTCHA_SCRIPT
+    script.async = true
+    script.defer = true
+    document.body.appendChild(script)
+  }, [])
 
   const handleSubmit = async (event) => {
     event.preventDefault()
-    const fields = Object.fromEntries(new FormData(event.currentTarget))
+    const form = event.currentTarget
+
+    // Cooldown first, so nobody solves a captcha only to be told to wait.
+    const remaining = COOLDOWN_MS - (Date.now() - lastSentAt())
+    if (remaining > 0) {
+      setSecondsLeft(Math.ceil(remaining / 1000))
+      setStatus('cooldown')
+      return
+    }
+
+    // hCaptcha writes its token into this textarea once solved.
+    if (!form.querySelector('textarea[name="h-captcha-response"]')?.value) {
+      setStatus('captcha')
+      return
+    }
+
+    const fields = Object.fromEntries(new FormData(form))
     setStatus('sending')
 
     try {
@@ -178,28 +341,49 @@ function ContactForm() {
       if (!result.success) throw new Error(result.message || 'rejected')
 
       setStatus('sent')
+      rememberSend()
       formRef.current?.reset()
+      // The token is single-use; without this the next send fails verification.
+      window.hcaptcha?.reset()
     } catch {
       // Never leave the visitor guessing: fall back to the phone number.
       setStatus('error')
     }
   }
 
-  const message =
-    status === 'sent'
-      ? 'Thanks — your message is on its way. Marci will get back to you shortly.'
-      : status === 'error'
-        ? 'Something went wrong sending that. Please call or text 206-919-6886 and Marci will help you right away.'
-        : ''
+  const message = statusMessage(status, secondsLeft)
 
   return (
-    <form ref={formRef} className="flex flex-col gap-5" onSubmit={handleSubmit}>
+    /* min-w-0: this form is a grid item, and grid items default to
+       min-width:auto, so they refuse to shrink below their widest child. The
+       captcha's fixed 302px iframe set that floor and burst the column out of
+       the container below ~355px. */
+    <form ref={formRef} className="flex min-w-0 flex-col gap-5" onSubmit={handleSubmit}>
       <Field label="Name" name="name" />
       <Field label="Email" name="email" required type="email" />
-      <Field label="Message" name="message" as="textarea" />
+      <Field label="Message" name="message" as="textarea" inputRef={messageRef} />
 
       {/* Honeypot: bots complete it, people never see it. */}
       <input type="checkbox" name="botcheck" className="hidden" tabIndex={-1} autoComplete="off" />
+
+      {/*
+        Upgraded into the hCaptcha widget by Web3Forms' script. The widget is a
+        fixed ~302px iframe that cannot be told to be narrower, so below 345px
+        it is scaled down to fit instead of scrolling sideways.
+        w-max lets the inner box size to whatever the widget actually is rather
+        than hard-coding its width, and the wrapper clips the untransformed
+        layout box so the oversized inner div can never widen the form.
+      */}
+      {/* overflow-clip, not hidden: hidden makes this a scroll container, so
+          focusing the widget could scroll its untransformed layout box and
+          shift the scaled render. clip cannot scroll at all. */}
+      <div className="max-w-full overflow-clip">
+        <div
+          className="h-captcha w-max origin-top-left max-[345px]:scale-90 max-[319px]:scale-[0.82]"
+          data-captcha="true"
+          data-theme="dark"
+        />
+      </div>
 
       <Button type="submit" className="mt-1 self-start" disabled={status === 'sending'}>
         {status === 'sending' ? 'Sending…' : 'Send message'}
@@ -212,7 +396,7 @@ function ContactForm() {
         className={
           message
             ? `rounded-xl border px-4 py-3.5 text-sm leading-[1.6] text-ink ${
-                status === 'error' ? 'border-white/20 bg-white/5' : 'border-accent/40 bg-accent/10'
+                status === 'sent' ? 'border-accent/40 bg-accent/10' : 'border-white/20 bg-white/5'
               }`
             : 'sr-only'
         }
@@ -223,14 +407,14 @@ function ContactForm() {
   )
 }
 
-function Contact() {
+function Contact({ enquiry }) {
   return (
     <section id="contact" className="relative z-10 bg-transparent py-14 md:py-24">
       <Container>
         <SectionHeading eyebrow="Get in touch" title="Call or visit" className="pb-10 md:pb-12" />
 
         <div className="grid gap-10 md:grid-cols-2 md:gap-[72px]">
-          <ContactForm />
+          <ContactForm enquiry={enquiry} />
 
           <div className="flex flex-col gap-8">
             <div className="flex flex-col items-start gap-3.5">

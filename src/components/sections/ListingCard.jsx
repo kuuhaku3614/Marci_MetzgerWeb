@@ -8,7 +8,7 @@ const STATUS_STYLES = {
   Pending: 'bg-ink text-ground',
 }
 
-function ListingCard({ listing }) {
+function ListingCard({ listing, onEnquire }) {
   const specs =
     listing.type === 'Land'
       ? [`${listing.lotAcres} acres`, 'Utilities at road']
@@ -16,7 +16,7 @@ function ListingCard({ listing }) {
 
   return (
     <article
-      className={`group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md transition-all duration-[250ms] ${CARD_GOLD}`}
+      className={`group relative flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md transition-all duration-[250ms] ${CARD_GOLD}`}
     >
       {/* Real photo when the listing has one, Placeholder until it does. */}
       <div className="relative h-[190px] w-full border-b border-white/10 md:h-[200px]">
@@ -54,6 +54,24 @@ function ListingCard({ listing }) {
           ))}
         </ul>
       </div>
+
+      {/*
+       * The whole card activates, but the card's contents are flow content —
+       * a heading and a list — which cannot legally live inside a <button>.
+       * So the button is a transparent overlay that carries the accessible
+       * name, leaving the real heading and specs in the document outline.
+       * Being a real <button> it is tabbable and answers Enter and Space for
+       * free; a div with onClick would answer neither.
+       */}
+      <button
+        type="button"
+        onClick={() => onEnquire?.(listing)}
+        className="absolute -inset-px z-10 cursor-pointer rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      >
+        <span className="sr-only">
+          Ask Marci about {listing.address}, {listing.city} &mdash; {formatPrice(listing.price)}
+        </span>
+      </button>
     </article>
   )
 }
