@@ -1,9 +1,14 @@
-import { useId } from 'react'
+import { useId, useRef } from 'react'
 import { ChevronDownIcon } from './Icons'
 import { Eyebrow } from './SectionHeading'
+import { useKeyboardOcclusion } from '../../hooks/useKeyboardOcclusion'
 
 function Select({ label, value, onChange, options, className = '' }) {
   const id = useId()
+  const selectRef = useRef(null)
+
+  useKeyboardOcclusion(selectRef)
+
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
       <label htmlFor={id}>
@@ -11,6 +16,7 @@ function Select({ label, value, onChange, options, className = '' }) {
       </label>
       <div className="relative">
         <select
+          ref={selectRef}
           id={id}
           value={value}
           onChange={(event) => onChange(event.target.value)}

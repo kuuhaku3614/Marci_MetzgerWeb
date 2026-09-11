@@ -5,6 +5,7 @@ import SectionHeading, { Eyebrow } from '../ui/SectionHeading'
 import { LINK_GOLD, OUTLINE_GOLD } from '../ui/hoverStyles'
 import { ChevronDownIcon, PhoneIcon } from '../ui/Icons'
 import { formatPrice } from '../../data/listings'
+import { useKeyboardOcclusion } from '../../hooks/useKeyboardOcclusion'
 
 const OFFICE_ADDRESS = '3190 HW 160, Suite F, Pahrump, NV, 89048'
 
@@ -121,6 +122,11 @@ function OfficeHoursDropdown() {
 function Field({ label, name, inputRef, required = false, as = 'input', type = 'text' }) {
   const id = useId()
   const Tag = as
+  const internalRef = useRef(null)
+  const ref = inputRef || internalRef
+
+  useKeyboardOcclusion(ref)
+
   return (
     <div className="flex flex-col gap-2">
       <label htmlFor={id}>
@@ -130,7 +136,7 @@ function Field({ label, name, inputRef, required = false, as = 'input', type = '
         </Eyebrow>
       </label>
       <Tag
-        ref={inputRef}
+        ref={ref}
         id={id}
         name={name}
         type={as === 'input' ? type : undefined}
